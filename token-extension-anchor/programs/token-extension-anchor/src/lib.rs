@@ -108,7 +108,7 @@ pub struct TransferHook<'info> {
     pub destination_token: InterfaceAccount<'info, TokenAccount>,
     /// CHECK: source token account owner, can be SystemAccount or PDA owned by another program
     pub owner: UncheckedAccount<'info>,
-    // CHECK: ExtraAccountMetaList Account,
+    /// CHECK: ExtraAccountMetaList Account, pda
     #[account(
         seeds = [b"extra-account-metas", mint.key().as_ref()], 
         bump
