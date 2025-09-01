@@ -4,6 +4,11 @@ Transfer Hook is part of a collection of extensions introduced with Token22 prog
 
 It allows you to execute custom logic while transfering tokens.
 
+**Why can't someone just write custom logic in their contract instead of using the extension?**
+
+In normal contract one can bypass the custom logic by calling the transfer seperately.
+But TransferHook Extension enfores the logic on transfer level itself.
+
 ### Test
 
 - Run a seperate solana-test-validator in seperate terminal
