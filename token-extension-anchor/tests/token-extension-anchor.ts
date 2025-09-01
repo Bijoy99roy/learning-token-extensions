@@ -3,14 +3,18 @@ import { Program } from "@coral-xyz/anchor";
 import { TokenExtensionAnchor } from "../target/types/token_extension_anchor";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
+  createAssociatedTokenAccountInstruction,
   createInitializeMintInstruction,
   createInitializeTransferHookInstruction,
+  createMintToInstruction,
+  createTransferCheckedWithTransferHookInstruction,
   ExtensionType,
   getAssociatedTokenAddressSync,
   getMintLen,
   TOKEN_2022_PROGRAM_ID,
 } from "@solana/spl-token";
 import {
+  LAMPORTS_PER_SOL,
   sendAndConfirmTransaction,
   SystemProgram,
   Transaction,
@@ -86,5 +90,89 @@ describe("token-extension-anchor", () => {
     ]);
 
     console.log(`Transaction Signature: ${txnSig}`);
+  });
+
+  it("Create token account and Mint tokens", async () => {
+    const amount = 100 * LAMPORTS_PER_SOL;
+
+    const transaction = new Transaction().add(
+      createAssociatedTokenAccountInstruction(
+        provider.wallet.publicKey,
+        sourceTokenAccount,
+        provider.wallet.publicKey,
+        mint.publicKey,
+        TOKEN_2022_PROGRAM_ID,
+        ASSOCIATED_TOKEN_PROGRAM_ID
+      ),
+      createAssociatedTokenAccountInstruction(
+        provider.wallet.publicKey,
+        destinationTokenAccount,
+        recipient.publicKey,
+        mint.publicKey,
+        TOKEN_2022_PROGRAM_ID,
+        ASSOCIATED_TOKEN_PROGRAM_ID
+      ),
+      createMintToInstruction(
+        mint.publicKey,
+        sourceTokenAccount,
+        provider.wallet.publicKey,
+        amount,
+        [],
+        TOKEN_2022_PROGRAM_ID
+      )
+    );
+
+    const txSig = await sendAndConfirmTransaction(connection, transaction, [
+      provider.wallet.payer,
+    ]);
+
+    console.log("Transaction Signature: ", txSig);
+  });
+
+  it("Create ExtraAccountMetaList Account", async () => {
+    const initalizeExtraAccountMetaListInstruction = await program.methods
+      .intializeExtraAccountMetaList()
+      .accounts({
+        mint: mint.publicKey,
+        extraAccountMetaList: extraAccountMetaPda,
+        tokenProgram: TOKEN_2022_PROGRAM_ID,
+      })
+      .instruction();
+    const transaction = new Transaction().add(
+      initalizeExtraAccountMetaListInstruction
+    );
+
+    const txSig = await sendAndConfirmTransaction(connection, transaction, [
+      provider.wallet.payer,
+    ]);
+
+    console.log("Transaction Signature: ", txSig);
+  });
+
+  it("Transfer Hook with Extra Account Meta", async () => {
+    const amount = 1 * LAMPORTS_PER_SOL;
+    const bigIntAmount = BigInt(amount);
+
+    // Standard token transfer instruction
+    const transferInstruction =
+      await createTransferCheckedWithTransferHookInstruction(
+        connection,
+        sourceTokenAccount,
+        mint.publicKey,
+        destinationTokenAccount,
+        provider.wallet.publicKey,
+        bigIntAmount,
+        decimals,
+        [],
+        "confirmed",
+        TOKEN_2022_PROGRAM_ID
+      );
+
+    const transaction = new Transaction().add(transferInstruction);
+    const txSig = await sendAndConfirmTransaction(connection, transaction, [
+      provider.wallet.payer,
+    ]);
+
+    console.log("Transaction Signature: ", txSig);
   });
 });
