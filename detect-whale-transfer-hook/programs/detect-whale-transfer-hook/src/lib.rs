@@ -20,7 +20,7 @@ pub mod detect_whale_transfer_hook {
             ExtraAccountMeta::new_with_seeds(
                 &[
                     Seed::Literal{
-                        bytes: "whale_acount".as_bytes().to_vec()
+                        bytes: "whale_account".as_bytes().to_vec()
                     }
                 ],
                 false, // is_signer
